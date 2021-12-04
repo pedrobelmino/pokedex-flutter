@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pokedex_flutter/domain/pokemon_list_domain.dart';
+import 'package:pokedex_flutter/pokemonlist/cubit/events/pokemonlist_event.dart';
+import 'package:pokedex_flutter/pokemonlist/cubit/pokemonlist_cubit.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key, required this.title}) : super(key: key);
+class PokemonListView extends StatelessWidget {
+  const PokemonListView({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
   @override
-  State<HomePage> createState() => HomePageState();
-}
-
-class HomePageState extends State<HomePage> {
-  @override
   Widget build(BuildContext context) {
+    context.read<PokemonListCubit>().listPokemons();
     const backgroundColor = Color.fromRGBO(144, 238, 144, 0.8);
     return Scaffold(
       body: Container(
@@ -27,11 +27,19 @@ class HomePageState extends State<HomePage> {
                 height: 5,
               ),
               lineGradient(),
-              pokemonList(),
+              BlocBuilder<PokemonListCubit, PokemonListEvent>(
+                  builder: (context, state) {
+                if (state is PokemonListSucessEvent) {
+                  var eventSucces = state as PokemonListSucessEvent;
+                  return pokemonList(eventSucces.pokemonList);
+                } else {
+                  return progressBarList();
+                }
+              }),
               lineGradient(),
             ]),
       ),
-      bottomNavigationBar: navigationBar(backgroundColor),
+      bottomNavigationBar: navigationBar(context, backgroundColor),
     );
   }
 
@@ -45,7 +53,9 @@ class HomePageState extends State<HomePage> {
                 colors: [Colors.blue, Colors.green])));
   }
 
-  BottomAppBar navigationBar(backgroundColor) => BottomAppBar(
+  BottomAppBar navigationBar(
+          BuildContext buildContext, Color backgroundColor) =>
+      BottomAppBar(
         color: backgroundColor,
         child: Container(
           padding: const EdgeInsets.all(8.0),
@@ -53,12 +63,20 @@ class HomePageState extends State<HomePage> {
           child: Row(
             children: [
               Expanded(
+                  flex: 1,
                   child: Column(
-                children: [
-                  Image(image: AssetImage('assets/images/pokemon_navbar.png')),
-                  Text("Pokemons"),
-                ],
-              )),
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          buildContext.read<PokemonListCubit>().listPokemons();
+                        },
+                        child: Image(
+                            image:
+                                AssetImage('assets/images/pokemon_navbar.png')),
+                      ),
+                      Text("Pokemons"),
+                    ],
+                  )),
               Expanded(
                   child: Column(
                 children: [
@@ -78,7 +96,7 @@ class HomePageState extends State<HomePage> {
         ),
       );
 
-  Expanded pokemonList() {
+  Expanded pokemonList(PokemonList pokemonList) {
     return Expanded(
       child: Container(
         color: Colors.white,
@@ -86,12 +104,12 @@ class HomePageState extends State<HomePage> {
           itemBuilder: (BuildContext context, int index) {
             return ListTile(
               contentPadding: EdgeInsets.all(8.0),
-              title: Text("Bulbasaur"),
+              title: Text(pokemonList.results[index].name),
               leading: Image(
                   image: AssetImage('assets/images/examples/bulbasaur.png')),
             );
           },
-          itemCount: 5,
+          itemCount: pokemonList.results.length,
           scrollDirection: Axis.vertical,
           separatorBuilder: (BuildContext context, int index) {
             return Divider(
@@ -137,4 +155,17 @@ class HomePageState extends State<HomePage> {
                     borderSide: BorderSide.none,
                     borderRadius: BorderRadius.circular(25.0)))),
       );
+
+  Expanded progressBarList() {
+    return Expanded(
+      child: Container(
+        color: Colors.white,
+        child: ListView(padding: const EdgeInsets.all(8), children: <Widget>[
+          Center(
+              child: SizedBox(
+                  width: 30, height: 30, child: CircularProgressIndicator()))
+        ]),
+      ),
+    );
+  }
 }
