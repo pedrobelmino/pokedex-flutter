@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pokedex_flutter/domain/pokemon_list_domain.dart';
 import 'package:pokedex_flutter/infrastructure/repository/pokemon_repository.dart';
 import 'package:pokedex_flutter/pokemonlist/cubit/events/pokemonlist_event.dart';
 
@@ -10,7 +9,6 @@ class PokemonListCubit extends Cubit<PokemonListEvent> {
     emit(PokemonListLoadingEvent());
 
     var pokemons = await PokemonRepository().getPokemonList();
-    await Future.delayed(Duration(seconds: 5));
     emit(PokemonListSucessEvent(pokemonList: pokemons));
   }
 }

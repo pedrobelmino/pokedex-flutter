@@ -4,10 +4,24 @@ import 'package:pokedex_flutter/domain/pokemon_list_domain.dart';
 import 'package:pokedex_flutter/pokemonlist/cubit/events/pokemonlist_event.dart';
 import 'package:pokedex_flutter/pokemonlist/cubit/pokemonlist_cubit.dart';
 
-class PokemonListView extends StatelessWidget {
+class PokemonListView extends StatefulWidget {
   const PokemonListView({Key? key, required this.title}) : super(key: key);
 
   final String title;
+
+  @override
+  _PokemonListState createState() => _PokemonListState();
+}
+
+class _PokemonListState extends State<PokemonListView> {
+  late String pokeInputText;
+
+  @override
+  initState() {
+    // at the beginning, all users are shown
+    pokeInputText = "";
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +44,7 @@ class PokemonListView extends StatelessWidget {
               BlocBuilder<PokemonListCubit, PokemonListEvent>(
                   builder: (context, state) {
                 if (state is PokemonListSucessEvent) {
-                  var eventSucces = state as PokemonListSucessEvent;
+                  var eventSucces = state;
                   return pokemonList(eventSucces.pokemonList);
                 } else {
                   return progressBarList();
@@ -96,20 +110,32 @@ class PokemonListView extends StatelessWidget {
         ),
       );
 
-  Expanded pokemonList(PokemonList pokemonList) {
+  Expanded pokemonList(PokemonList pokemonListAll) {
+    var pokemonList = pokemonListAll.results;
+    pokemonList.sort((a, b) => a.name.compareTo(b.name));
+    if (pokeInputText != "") {
+      pokemonList = pokemonList
+          .where(
+              (i) => i.name.toUpperCase().contains(pokeInputText.toUpperCase()))
+          .toList();
+    }
+
     return Expanded(
       child: Container(
         color: Colors.white,
         child: ListView.separated(
           itemBuilder: (BuildContext context, int index) {
+            var pokemon = pokemonList[index];
+            var urlSplit = pokemon.url.split("/");
+            var id = urlSplit[urlSplit.length - 2];
             return ListTile(
               contentPadding: EdgeInsets.all(8.0),
-              title: Text(pokemonList.results[index].name),
-              leading: Image(
-                  image: AssetImage('assets/images/examples/bulbasaur.png')),
+              title: Text(pokemon.name),
+              leading: Image.network(
+                  'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$id.png'),
             );
           },
-          itemCount: pokemonList.results.length,
+          itemCount: pokemonList.length,
           scrollDirection: Axis.vertical,
           separatorBuilder: (BuildContext context, int index) {
             return Divider(
@@ -136,6 +162,11 @@ class PokemonListView extends StatelessWidget {
   Padding textInputSearchPokemon() => Padding(
         padding: const EdgeInsets.all(8.0),
         child: TextField(
+            onChanged: (value) {
+              setState(() {
+                pokeInputText = value;
+              });
+            },
             style: TextStyle(
               fontSize: 18.0,
               color: Colors.black,
