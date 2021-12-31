@@ -4,6 +4,9 @@ import 'package:pokedex_flutter/domain/pokemon_list_domain.dart';
 import 'package:pokedex_flutter/pokemonlist/cubit/events/pokemonlist_event.dart';
 import 'package:pokedex_flutter/pokemonlist/cubit/pokemonlist_cubit.dart';
 
+import 'pass_arguments_screen.dart';
+import 'screen_arguments.dart';
+
 class PokemonListView extends StatefulWidget {
   const PokemonListView({Key? key, required this.title}) : super(key: key);
 
@@ -18,14 +21,13 @@ class _PokemonListState extends State<PokemonListView> {
 
   @override
   initState() {
-    // at the beginning, all users are shown
     pokeInputText = "";
     super.initState();
+    context.read<PokemonListCubit>().listPokemons();
   }
 
   @override
   Widget build(BuildContext context) {
-    context.read<PokemonListCubit>().listPokemons();
     const backgroundColor = Color.fromRGBO(144, 238, 144, 0.8);
     return Scaffold(
       body: Container(
@@ -129,6 +131,16 @@ class _PokemonListState extends State<PokemonListView> {
             var urlSplit = pokemon.url.split("/");
             var id = urlSplit[urlSplit.length - 2];
             return ListTile(
+              onTap: () {
+                Navigator.pushNamed(
+                  context,
+                  PassArgumentsScreen.routeName,
+                  arguments: ScreenArguments(
+                    'Pokemon ',
+                    'ID $id',
+                  ),
+                );
+              },
               contentPadding: EdgeInsets.all(8.0),
               title: Text(pokemon.name),
               leading: Image.network(
